@@ -1,21 +1,21 @@
+const express = require("express");
+const app = express();
 require("dotenv").config();
+const fetchApi = require("./lib/fetchAPI");
+const path = require("path");
+const port = process.env["PORT"] || 8080;
 
-const url = process.env["API_URL"];
-const username = process.env["API_EMAIL"];
-const pwd = process.env["API_PWD"];
+app.get("/", async (req, res) => {
+  let result = await fetchApi();
+  res.render(path.join(__dirname, "views", "index.ejs"), {
+    values: result["values"],
+  });
+});
 
-const buffer = Buffer.from(`${username}:${pwd}`);
-const buffer64bits = buffer.toString("base64");
+app.get("/view/:parc", (req, res) => {
+  const id = req.params["parc"];
+});
 
-const getAPIJson = async () => {
-  return await fetch(url, {
-    method: "GET",
-    headers: {
-      Authorization: `Basic ${buffer64bits}`,
-    },
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      return data;
-    });
-};
+app.listen(port, () => {
+  console.log(`Serveur en ligne sur le port ${port}`);
+});
