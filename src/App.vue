@@ -1,10 +1,14 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import {Buffer} from 'buffer'
 const parcRelais = ref([])
 const displayedParcRelais = ref([])
 const search = ref('')
 const btnClass = ref('hover:bg-red-700 bg-red-600 active:bg-red-800')
-const API_URL = "https://data.grandlyon.com/fr/datapusher/ws/rdata/tcl_sytral.tclparcrelaisst/all.json?maxfeatures=100&start=1&filename=parcs-relais-reseau-transports-commun-lyonnais"
+const API_URL = import.meta.env.VITE_API_URL
+const API_COMBO = import.meta.env.VITE_COMBO
+const buffer64bits = Buffer.from(`${API_COMBO}`).toString("base64")
+const optionDate = {weekday: "short", month: "short", day: "numeric"}
 
 import { fuzzySearch } from './utils/utils';
 
@@ -94,13 +98,25 @@ function extractHours(description) {
   };
 }
 
-function toggleBtn() {
+const toggleBtn = () => {
   btnClass.value = btnClass.value.includes("red") ? "hover:bg-green-700 bg-green-600 active:bg-green-800" : "hover:bg-red-700 bg-red-600 active:bg-red-800"
 }
 
+const displayDate = (txt) => {
+  const date = new Date(txt)
+  const today = new Date()
+  if(date.toDateString() === today.toDateString()) return `Aujourd'hui à ${date.toLocaleTimeString()}`
+  else return `Le ${date.toLocaleDateString()} à ${date.toLocaleTimeString()}`
+}
+
 onMounted(async () => {
-  const response = await fetch(API_URL)
+  const response = await fetch(API_URL, {headers: {Authorization: `Basic ${buffer64bits}`}})
   const data = await response.json()
+
+  // Sort data alphabetically by parc relais name
+  data.values = data.values.sort((a, b) => {
+    if(a["nom"] < b["nom"]) return -1
+  })
   parcRelais.value = data.values.map(parc => ({ ...parc, horaires: extractHours(parc.horaires) })) 
   displayedParcRelais.value = data.values.map(parc => ({ ...parc, horaires: extractHours(parc.horaires) }))
 })
@@ -133,7 +149,7 @@ function showSearchResult() {
                 <h3 className="text-lg font-semibold text-blue-800">Places dispo</h3>
               </div>
               <div className="flex justify-between items-center">
-                <p className="text-3xl font-bold text-blue-700">{{ parc.capacite }}</p>
+                <p className="text-3xl font-bold text-blue-700">{{ parc.nb_tot_place_dispo }}</p>
               </div>
             </div>
             <div v-if="parc.horaires" className="bg-gray-100 p-3 rounded-md">
@@ -155,6 +171,14 @@ function showSearchResult() {
                 <ul class="text-xs text-gray-600">
                   <li v-for="(modality, index) in parc.horaires.modalities" :key="index">
                     {{ modality }}
+                  </li>
+                </ul>
+              </div>
+              <div v-if="parc.last_update" class="mt-2">
+                <h5 class="text-xs font-bold text-gray-700 mb-1">Dernière mise à jour</h5>
+                <ul class="text-xs text-gray-600">
+                  <li>
+                    {{displayDate(parc.last_update)}}
                   </li>
                 </ul>
               </div>
