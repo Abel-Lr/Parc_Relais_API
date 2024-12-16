@@ -6,9 +6,8 @@ const displayedParcRelais = ref([])
 const search = ref('')
 const btnClass = ref('hover:bg-red-700 bg-red-600 active:bg-red-800')
 const API_URL = import.meta.env.VITE_API_URL
-const API_COMBO = import.meta.env.VITE_COMBO
-const buffer64bits = Buffer.from(`${API_COMBO}`).toString("base64")
-const optionDate = { weekday: "short", month: "short", day: "numeric" }
+const API_COMBO = btoa(import.meta.env.VITE_COMBO)
+
 
 import { fuzzySearch } from './utils/utils';
 
@@ -111,7 +110,7 @@ const displayDate = (txt) => {
 }
 
 onMounted(async () => {
-  const response = await fetch(API_URL, { headers: { Authorization: `Basic ${buffer64bits}` } })
+  const response = await fetch(API_URL, { headers: { Authorization: `Basic ${API_COMBO}` } })
   const data = await response.json()
 
   // Sort data alphabetically by parc relais name
