@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
-import {Buffer} from 'buffer'
+import { Buffer } from 'buffer'
 const parcRelais = ref([])
 const displayedParcRelais = ref([])
 const search = ref('')
@@ -8,7 +8,7 @@ const btnClass = ref('hover:bg-red-700 bg-red-600 active:bg-red-800')
 const API_URL = import.meta.env.VITE_API_URL
 const API_COMBO = import.meta.env.VITE_COMBO
 const buffer64bits = Buffer.from(`${API_COMBO}`).toString("base64")
-const optionDate = {weekday: "short", month: "short", day: "numeric"}
+const optionDate = { weekday: "short", month: "short", day: "numeric" }
 
 import { fuzzySearch } from './utils/utils';
 
@@ -17,7 +17,7 @@ function extractHours(description) {
   const extractMainHours = (desc) => {
     const hourPattern = /Ouvert de (\d{1,2}h\d{2}) à (\d{1,2}h\d{2})/;
     const matchBase = desc.match(hourPattern);
-    
+
     if (!matchBase) {
       // Handle "En accès libre" case
       if (/accès libre/i.test(desc)) {
@@ -105,19 +105,20 @@ const toggleBtn = () => {
 const displayDate = (txt) => {
   const date = new Date(txt)
   const today = new Date()
-  if(date.toDateString() === today.toDateString()) return `Aujourd'hui à ${date.toLocaleTimeString()}`
-  else return `Le ${date.toLocaleDateString()} à ${date.toLocaleTimeString()}`
+  let date_ret = date.toDateString() === today.toDateString() ? "Aujourd'hui" : `Le ${date.toLocaleDateString()}`;
+
+  return `${date_ret} à ${date.toLocaleTimeString()}`
 }
 
 onMounted(async () => {
-  const response = await fetch(API_URL, {headers: {Authorization: `Basic ${buffer64bits}`}})
+  const response = await fetch(API_URL, { headers: { Authorization: `Basic ${buffer64bits}` } })
   const data = await response.json()
 
   // Sort data alphabetically by parc relais name
   data.values = data.values.sort((a, b) => {
-    if(a["nom"] < b["nom"]) return -1
+    if (a["nom"] < b["nom"]) return -1
   })
-  parcRelais.value = data.values.map(parc => ({ ...parc, horaires: extractHours(parc.horaires) })) 
+  parcRelais.value = data.values.map(parc => ({ ...parc, horaires: extractHours(parc.horaires) }))
   displayedParcRelais.value = data.values.map(parc => ({ ...parc, horaires: extractHours(parc.horaires) }))
 })
 
@@ -134,7 +135,8 @@ function showSearchResult() {
     <input type="text" v-model="search" @input="showSearchResult" placeholder="Rechercher un parc relais"
       class="w-3/4 mx-auto mt-4 p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
     <div>
-      <p :class="`${btnClass} w-fit mx-auto text-white font-bold cursor-pointer rounded-md px-2 py-2 select-none`" @click="toggleBtn">OUVERTS</p>
+      <p :class="`${btnClass} w-fit mx-auto text-white font-bold cursor-pointer rounded-md px-2 py-2 select-none`"
+        @click="toggleBtn">OUVERTS</p>
     </div>
     <div class="w-full">
       <div class="grid gap-4  grid-cols-1 md:grid-cols-3 w-3/4 mx-auto">
@@ -178,7 +180,7 @@ function showSearchResult() {
                 <h5 class="text-xs font-bold text-gray-700 mb-1">Dernière mise à jour</h5>
                 <ul class="text-xs text-gray-600">
                   <li>
-                    {{displayDate(parc.last_update)}}
+                    {{ displayDate(parc.last_update) }}
                   </li>
                 </ul>
               </div>
