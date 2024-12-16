@@ -1,5 +1,7 @@
 # Parc_Relais_API
 
+[![en](https://img.shields.io/badge/lang-fr-blue.svg)](https://github.com/Abel-Laroussi/Parc_Relais_API/blob/main/README-FR.md)
+
 ## Description
 
 **[WIP]**
