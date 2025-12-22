@@ -5,8 +5,8 @@ const displayedParcRelais = ref([])
 const search = ref('')
 const onlyOpened = ref(false);
 const btnClass = ref('hover:bg-slate-700 bg-slate-600 active:bg-slate-800')
-const API_URL = import.meta.env.VITE_API_URL
-const API_COMBO = btoa(import.meta.env.VITE_COMBO)
+// const API_URL = import.meta.env.VITE_API_URL
+// const API_COMBO = btoa(import.meta.env.VITE_COMBO)
 
 
 // import { parseOpeningHours } from "./lib/hour_parser/parseOpeningHours";
@@ -19,7 +19,9 @@ const toggleBtn = () => {
 }
 
 onMounted(async () => {
-  const response = await fetch(API_URL, { headers: { Authorization: `Basic ${API_COMBO}` } })
+  const response = await fetch("/get-api-parc");
+  if (!response.ok) throw new Error("Network error");
+  // API_URL, { headers: { Authorization: `Basic ${API_COMBO}` } }
   const data = await response.json()
 
   // Sort data alphabetically by parc relais name
