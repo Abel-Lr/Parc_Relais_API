@@ -1,3 +1,23 @@
+import { parseOpeningHours } from "../lib/hour_parser/parseOpeningHours";
+import getJoursFeries from "jours-feries-fr";
+
+const weekdays = [
+  "dimanche",
+  "lundi",
+  "mardi",
+  "mercredi",
+  "jeudi",
+  "vendredi",
+  "samedi",
+];
+
+export function displayOnlyOpened(items, toggled) {
+  if(!toggled) return items;
+  return items.filter((el) => {
+    return !el.closed
+  })
+}
+
 export function fuzzySearch(query, items, options = {}) {
   // Normalize query
   const normalizedQuery = query
@@ -17,90 +37,105 @@ export function fuzzySearch(query, items, options = {}) {
   });
 }
 
-export function extractHours(description) {
-  // Function to extract main hours
-  const extractMainHours = (desc) => {
-    const hourPattern = /Ouvert de (\d{1,2}h\d{2}) à (\d{1,2}h\d{2})/;
-    const matchBase = desc.match(hourPattern);
+function forceFirstLetterUpper(str) {
+  let first_char = str[0].toUpperCase();
+  return first_char + str.slice(1).toLowerCase();
+}
 
-    if (!matchBase) {
-      // Handle "En accès libre" case
-      if (/accès libre/i.test(desc)) {
-        return {
-          weekdays: { open: null, close: null },
-          weekends: { open: null, close: null },
-        };
-      }
-      return null;
-    }
-
-    // Check for different day ranges
-    const weekdayPatterns = [
-      /du lundi au jeudi/,
-      /du dimanche au jeudi/,
-      /du lundi au vendredi/,
-      /du lundi au dimanche/,
-    ];
-
-    const weekendPatterns = [
-      /de 4h30 à 3h00 les vendredis et samedis/,
-      /vendredi et samedi/,
-    ];
-
-    const defaultHours = {
-      open: matchBase[1],
-      close: matchBase[2],
+// Example
+// {
+//     "LUNDI": {
+//         "ouverture": "4h30",
+//         "fermeture": "1h00"
+//     },
+//     "MARDI": {
+//         "ouverture": "4h30",
+//         "fermeture": "1h00"
+//     },
+//     "MERCREDI": {
+//         "ouverture": "4h30",
+//         "fermeture": "1h00"
+//     },
+//     "JEUDI": {
+//         "ouverture": "4h30",
+//         "fermeture": "1h00"
+//     },
+//     "VENDREDI": {
+//         "ouverture": "4h30",
+//         "fermeture": "3h00"
+//     },
+//     "SAMEDI": {
+//         "ouverture": "12h00",
+//         "fermeture": "3h00"
+//     },
+//     "DIMANCHE": null,
+//     "FERIE": true
+// }
+export function reformatHoursJSON(week) {
+  let ret_obj = { week: {}, ferie: false };
+  const week_obj = parseOpeningHours(week);
+  Object.keys(week_obj).forEach((week) => {
+    const index = week;
+    const value = week_obj[index];
+    if (index == "FERIE") return;
+    if (!value) return (ret_obj["week"][forceFirstLetterUpper(index)] = null);
+    const open_value = value["ouverture"].split("h");
+    const closed_value = value["fermeture"].split("h");
+    ret_obj["week"][forceFirstLetterUpper(index)] = {
+      open: { hour: open_value[0], minute: open_value[1] },
+      closed: { hour: closed_value[0], minute: closed_value[1] },
     };
+  });
+  ret_obj.ferie = week_obj.FERIE;
+  return ret_obj;
+}
 
-    const result = {
-      weekdays: defaultHours,
-      weekends: defaultHours,
-    };
+export function isWeekdayToday(weekday) {
+  const weekday_idx = weekdays.indexOf(weekday);
+  const today = new Date().getDay();
+  return weekday_idx == today;
+}
 
-    // Specific day range modifications
-    if (weekdayPatterns.some((pattern) => pattern.test(desc))) {
-      result.weekdays = defaultHours;
-    }
+export function isTodayFerie() {
+  const today = new Date();
+  const jours_feries = getJoursFeries(today.getFullYear());
+  return jours_feries.has(today.toLocaleDateString("fr"));
+}
 
-    if (weekendPatterns.some((pattern) => pattern.test(desc))) {
-      result.weekends = {
-        open: "4h30",
-        close: "3h00",
-      };
-    }
+export function isClosed(horaires) {
+  // Fermé car Ferié ?
+  const ferie = horaires.ferie;
+  if(ferie) return true;
+  if (ferie && isTodayFerie()) return true;
 
-    return result;
-  };
+  const todayWeekDay = forceFirstLetterUpper(weekdays[new Date().getDay()]);
+  const horaireToday = horaires["week"][todayWeekDay];
 
-  // Function to extract modalities
-  const extractModalities = (desc) => {
-    const modalities = [];
+  // Fermé car pas d'horaires ajd ?
+  if (!horaireToday) return true;
 
-    // List of potential modality patterns
-    const modalityPatterns = [
-      /Réservé aux abonnés TCL/,
-      /Réservé aux abonnés PREMIUM/,
-      /Fermé les dimanches et jours fériés/,
-      /Accès libre en dehors de ces horaires/,
-      /Présence de \d+ arceaux et \d+ consignes vélos/,
-      /Niveau \d+ réservé aux abonnés/,
-    ];
+  // Calculate OpenHour
+  const openHourToday = horaireToday["open"];
+  const openHourDate = new Date();
+  openHourDate.setHours(openHourToday["hour"], openHourToday["minute"], 0);
 
-    modalityPatterns.forEach((pattern) => {
-      const match = desc.match(pattern);
-      if (match) {
-        modalities.push(match[0]);
-      }
-    });
+  // Closed Hour
+  const closedHourToday = horaireToday["closed"];
+  const closedHourDate = new Date();
+  closedHourDate.setHours(
+    closedHourToday["hour"],
+    closedHourToday["minute"],
+    0
+  );
 
-    return modalities.length > 0 ? modalities : null;
-  };
+  // Ex : Ouvert de 4h à 1h => Ouvert J à 4h jusqu'à J+1 à 1h
+  if (closedHourDate.getHours() <= openHourDate.getHours())
+    closedHourDate.setDate(closedHourDate.getDate() + 1);
 
-  // Combine hours and modalities
-  return {
-    hours: extractMainHours(description),
-    modalities: extractModalities(description),
-  };
+  const today = new Date();
+
+  // Fermé car en dehors des horaires d'ouverture
+  return today < openHourDate || today > closedHourDate;
 }
 
 export const displayDate = (txt) => {
@@ -111,5 +146,8 @@ export const displayDate = (txt) => {
       ? "Aujourd'hui"
       : `Le ${date.toLocaleDateString()}`;
 
-  return `${date_ret} à ${date.toLocaleTimeString()}`;
+  return `${date_ret} à ${date.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
 };
