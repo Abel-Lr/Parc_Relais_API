@@ -47,7 +47,7 @@ function updateDisplay() {
   <div class="w-full flex flex-col gap-2">
     <header class="flex flex-col bg-white sticky top-0 py-4 shadow-sm z-10">
       <h1 class="text-3xl font-bold mx-auto w-fit">
-        Quel parc relais ?
+        Parcs Relais du Grand Lyon
       </h1>
       <input type="text" v-model="search" @input="updateDisplay" placeholder="Rechercher un parc relais"
         class="w-3/4 mx-auto mt-4 p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
