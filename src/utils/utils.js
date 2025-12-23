@@ -12,10 +12,10 @@ const weekdays = [
 ];
 
 export function displayOnlyOpened(items, toggled) {
-  if(!toggled) return items;
+  if (!toggled) return items;
   return items.filter((el) => {
-    return !el.closed
-  })
+    return !el.closed;
+  });
 }
 
 export function fuzzySearch(query, items, options = {}) {
@@ -82,8 +82,14 @@ export function reformatHoursJSON(week) {
     const open_value = value["ouverture"].split("h");
     const closed_value = value["fermeture"].split("h");
     ret_obj["week"][forceFirstLetterUpper(index)] = {
-      open: { hour: open_value[0], minute: open_value[1] },
-      closed: { hour: closed_value[0], minute: closed_value[1] },
+      open: {
+        hour: open_value[0].padStart(2, "0"),
+        minute: open_value[1].padStart(2, "0"),
+      },
+      closed: {
+        hour: closed_value[0].padStart(2, "0"),
+        minute: closed_value[1].padStart(2, "0"),
+      },
     };
   });
   ret_obj.ferie = week_obj.FERIE;
@@ -105,7 +111,6 @@ export function isTodayFerie() {
 export function isClosed(horaires) {
   // Fermé car Ferié ?
   const ferie = horaires.ferie;
-  if(ferie) return true;
   if (ferie && isTodayFerie()) return true;
 
   const todayWeekDay = forceFirstLetterUpper(weekdays[new Date().getDay()]);
