@@ -113,4 +113,4 @@ To run the code properly, your computer needs to have [Docker](https://docs.dock
 
 ## Credits
 
-This project was made by [Abel-Lr](https://github.com/Abel-Lr), [NassBin](https://github.com/elkofy) & [Clément Guiton](https://github.com/ProbablyClem/)
+This project was made by [Abel-Lr](https://github.com/Abel-Lr), [Nassim Daikh](https://github.com/elkofy) & [Clément Guiton](https://github.com/ProbablyClem/)

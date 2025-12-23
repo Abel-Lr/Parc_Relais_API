@@ -114,4 +114,4 @@ Pour exécuter correctement le code, votre ordinateur doit avoir [Docker](https:
 
 ## Crédits
 
-Ce projet a été réalisé par [Abel-Lr](https://github.com/Abel-Lr), [NassBin](https://github.com/elkofy) & [Clément Guiton](https://github.com/ProbablyClem/)
+Ce projet a été réalisé par [Abel-Lr](https://github.com/Abel-Lr), [Nassim Daikh](https://github.com/elkofy) & [Clément Guiton](https://github.com/ProbablyClem/)
